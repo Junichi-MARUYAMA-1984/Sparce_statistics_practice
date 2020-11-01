@@ -65,31 +65,45 @@ linear_lasso <- function(X, y, lambda = 0, beta = rep(0, ncol(X))) {
   return(list(beta = beta, beta_0 = beta_0))
 }
 
-df <- read.table("crime.txt")
-x <- df[, 3:7]
-y <- df[, 1]
-p <- ncol(x)
-lambda_seq <- seq(0, 200, 0.1)
-
-plot(lambda_seq, 
-     xlim = c(0, 200), 
-     ylim = c(-10, 20), 
-     xlab = "lambda",
-     ylab = "beta", 
-     main = "各lambdaについての各係数の値",
-     type = "n", 
-     col = "red")
-
-r <- length(lambda_seq)
-coef_seq <- array(dim = c(r, p))
-
-for (i in 1:r) {
-  coef_seq[i, ] <- linear_lasso(x, y, lambda_seq[i])$beta
+# Function for Warm Start
+warm_start <- function(X, y, lambda_max = 100) {
+  dec <- round(lambda_max / 50)
+  lambda_seq <- seq(lambda_max, 1, -dec)
+  r <- length(lambda_seq)
+  p <- ncol(X)
+  
+  coef_seq <- matrix(nrow = r, ncol = p)
+  coef_seq[1, ] <- linear_lasso(X, y, lambda_seq[1])$beta
+  
+  for (k in 2:r) {
+    coef_seq[k, ] <- linear_lasso(X, y, lambda_seq[k], coef_seq[(k - 1), ])$beta
+  }
+  
+  return(coef_seq)
 }
 
+# Main routine
+
+crime <- read.table("crime.txt")
+X <- crime[, 3:7]
+y <- crime[, 1]
+
+coef_seq <- warm_start(X, y, 200)
+
+p <- ncol(X)
+lambda_max <- 200
+dec <- round(lambda_max / 50)
+lambda_seq <- seq(lambda_max, 1, -dec)
+
+plot(log(lambda_seq), 
+     coef_seq[, 1],
+     ylim = c(min(coef_seq), max(coef_seq)), 
+     xlab = "log(lambda)",
+     ylab = "係数", 
+     type = "n") 
+
 for (j in 1:p) {
-  par(new = TRUE)
-  lines(lambda_seq, coef_seq[, j], col = j)
+  lines(log(lambda_seq), coef_seq[, j], col = j)
 }
 
 legend("topright",
