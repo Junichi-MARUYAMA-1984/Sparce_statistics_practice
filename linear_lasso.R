@@ -38,9 +38,7 @@ centralize <- function(X, y, standardize = TRUE) {
 }
 
 # Function for linear Lasso
-linear_lasso <- function(X, y, lambda, beta) {
-  lambda <- 0
-  beta <- rep(0, ncol(X))
+linear_lasso <- function(X, y, lambda = 0, beta = rep(0, ncol(X))) {
   n <- nrow(X)
   p <- ncol(X)
   
@@ -57,9 +55,49 @@ linear_lasso <- function(X, y, lambda, beta) {
       beta[j] <- soft_th(lambda, sum(r * X[, j]) / n) / (sum(X[, j] * X[, j]) / n)
     }
     eps <- max(abs(beta - beta_old))
+    print(eps)
     beta_old <- beta
   }
   
   beta <- beta / res$X_sd
-  beta_0 <- res$y_bar - sum 
+  beta_0 <- res$y_bar - sum(res$X_bar * beta)
+  
+  return(list(beta = beta, beta_0 = beta_0))
 }
+
+df <- read.table("crime.txt")
+x <- df[, 3:7]
+y <- df[, 1]
+p <- ncol(x)
+lambda_seq <- seq(0, 200, 0.1)
+
+plot(lambda_seq, 
+     xlim = c(0, 200), 
+     ylim = c(-10, 20), 
+     xlab = "lambda",
+     ylab = "beta", 
+     main = "各lambdaについての各係数の値",
+     type = "n", 
+     col = "red")
+
+r <- length(lambda_seq)
+coef_seq <- array(dim = c(r, p))
+
+for (i in 1:r) {
+  coef_seq[i, ] <- linear_lasso(x, y, lambda_seq[i])$beta
+}
+
+for (j in 1:p) {
+  par(new = TRUE)
+  lines(lambda_seq, coef_seq[, j], col = j)
+}
+
+legend("topright",
+       legend = c("警察への年間資金",
+                  "25歳以上で高校を卒業した人の割合",
+                  "16~19歳で高校に通っていない人の割合", 
+                  "18~24歳で大学生の割合", 
+                  "25歳以上で4年制大学を卒業した人の割合"),
+       col = 1:p,
+       lwd = 2,
+       cex = 0.8)
