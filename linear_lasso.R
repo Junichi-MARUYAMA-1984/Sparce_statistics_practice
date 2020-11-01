@@ -1,3 +1,6 @@
+# Clear Working Memory
+rm(list = ls())
+
 # Function for determining formula type
 soft_th <- function(lambda, x) {
   return(sign(x) * pmax(abs(x) - lambda, 0))
@@ -34,7 +37,7 @@ centralize <- function(X, y, standardize = TRUE) {
     y <- y - y_bar
   }
   
-  return(list(X = x, y = y, X_bar = X_bar, X_sd = X_sd, y_bar = y_bar))
+  return(list(X = X, y = y, X_bar = X_bar, X_sd = X_sd, y_bar = y_bar))
 }
 
 # Function for linear Lasso
