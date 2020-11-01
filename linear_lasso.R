@@ -3,28 +3,31 @@ rm(list = ls())
 
 # Function for determining formula type
 soft_th <- function(lambda, x) {
+  # xの絶対値がlambdaの絶対値よりも小さいときは、0を返す。
+  # xの絶対値がlambdaの絶対値よりも大きいときは、
+  # 二者の絶対値の差に「xの元々の符号」を付けて返す。
   return(sign(x) * pmax(abs(x) - lambda, 0))
 }
 
 # Function for centralization
 centralize <- function(X, y, standardize = TRUE) {
-  X <- as.matrix(X)
-  n <- nrow(X)
-  p <- ncol(X)
-  X_bar <- array(dim = p)
-  X_sd <- array(dim = p)
+  X <- as.matrix(X) # DataFrame型の引数Xを行列型に変換。
+  n <- nrow(X) # 行列Xの行数
+  p <- ncol(X) # 行列Xの列数
+  X_bar <- array(dim = p) # 行列Xの各列成分の平均値を格納する配列
+  X_sd <- array(dim = p) # 行列Xの各列成分の標準偏差を格納する配列
   
   for (j in 1:p) {
-    X_bar[j] <- mean(X[, j])
-    X[, j] <- (X[, j] - X_bar[j])
-    X_sd[j] <- sqrt(var(X[, j]))
+    X_bar[j] <- mean(X[, j]) # 行列X第j列成分の平均値を計算。
+    X[, j] <- (X[, j] - X_bar[j]) # 行列X第j列の各成分に対して平均値を引き算。
+    X_sd[j] <- sqrt(var(X[, j])) # 行列X第j列成分の標準偏差を計算。
     
     if (standardize == TRUE) {
-      X[, j] <- X[, j] / X_sd[j]
+      X[, j] <- X[, j] / X_sd[j] # 正規化
     }
   }
   
-  if (class(y) == "matrix") { # in case y is matrix
+  if (class(y) == "matrix") { # yが行列の時は、各列に対して各列成分平均値を引き算。
     K <- ncol(y)
     y_bar <- array(dim = K)
     
@@ -32,7 +35,7 @@ centralize <- function(X, y, standardize = TRUE) {
       y_bar[k] <- mean(y[, k])
       y[, k] <- y[, k] - y_bar[k]
     }
-  } else { # in case y is vector
+  } else { # yがベクトルの時は、ベクトル成分の平均値を各成分から引き算。
     y_bar <- mean(y)
     y <- y - y_bar
   }
@@ -42,16 +45,17 @@ centralize <- function(X, y, standardize = TRUE) {
 
 # Function for linear Lasso
 linear_lasso <- function(X, y, lambda = 0, beta = rep(0, ncol(X))) {
-  n <- nrow(X)
-  p <- ncol(X)
+  n <- nrow(X) # データフレームXの行数
+  p <- ncol(X) # データフレームXの列数
   
-  res <- centralize(X, y)
-  X <- res$X
-  y <- res$y
+  res <- centralize(X, y) # 引数X, yを中心化。
+  X <- res$X # 中心化されたX。
+  y <- res$y # 中心化されたy。
   
-  eps <- 1
-  beta_old <- beta
+  eps <- 1 # betaの収束判定用変数を1で初期化。
+  beta_old <- beta # beta_oldを引数betaで初期化。
   
+  # Lassoのコアルーチン
   while (eps > 0.001) {
     for (j in 1:p) {
       r <- y - as.matrix(X[, -j]) %*% beta[-j]
@@ -62,8 +66,8 @@ linear_lasso <- function(X, y, lambda = 0, beta = rep(0, ncol(X))) {
     beta_old <- beta
   }
   
-  beta <- beta / res$X_sd
-  beta_0 <- res$y_bar - sum(res$X_bar * beta)
+  beta <- beta / res$X_sd # 各betaの成分を正規化する前の値に戻す
+  beta_0 <- res$y_bar - sum(res$X_bar * beta) # Lassoの切片beta_0
   
   return(list(beta = beta, beta_0 = beta_0))
 }
@@ -71,14 +75,15 @@ linear_lasso <- function(X, y, lambda = 0, beta = rep(0, ncol(X))) {
 # Function for Warm Start
 warm_start <- function(X, y, lambda_max = 100) {
   dec <- round(lambda_max / 50)
-  lambda_seq <- seq(lambda_max, 1, -dec)
-  r <- length(lambda_seq)
-  p <- ncol(X)
+  lambda_seq <- seq(lambda_max, 1, -dec) # lambdaを大きな値から始めて、徐々に小さくしていく。
+  r <- length(lambda_seq) # 用意したlambdaシーケンスの長さ
+  p <- ncol(X) # データフレームXの列数
   
-  coef_seq <- matrix(nrow = r, ncol = p)
-  coef_seq[1, ] <- linear_lasso(X, y, lambda_seq[1])$beta
+  coef_seq <- matrix(nrow = r, ncol = p) # 各lambdaに対するbeta格納用行列
+  coef_seq[1, ] <- linear_lasso(X, y, lambda_seq[1])$beta # 最大lambdaの時のbetaを計算。以降の計算の初期値となる。
   
   for (k in 2:r) {
+    # 一つ前のlambda値で求めたbeta値を用いて、次のlambda値でのbetaを計算する。
     coef_seq[k, ] <- linear_lasso(X, y, lambda_seq[k], coef_seq[(k - 1), ])$beta
   }
   
@@ -98,15 +103,15 @@ lambda_max <- 200
 dec <- round(lambda_max / 50)
 lambda_seq <- seq(lambda_max, 1, -dec)
 
-plot(log(lambda_seq), 
+plot(log(lambda_seq, base = 10), 
      coef_seq[, 1],
      ylim = c(min(coef_seq), max(coef_seq)), 
-     xlab = "log(lambda)",
+     xlab = "log(lambda) [base = 10]",
      ylab = "係数", 
      type = "n") 
 
 for (j in 1:p) {
-  lines(log(lambda_seq), coef_seq[, j], col = j)
+  lines(log(lambda_seq, base = 10), coef_seq[, j], col = j)
 }
 
 legend("topright",

@@ -3,6 +3,9 @@ rm(list = ls())
 
 # Function for determining formula type
 soft_th <- function(lambda, x) {
+  # xの絶対値がlambdaの絶対値よりも小さいときは、0を返す。
+  # xの絶対値がlambdaの絶対値よりも大きいときは、
+  # 二者の絶対値の差に「xの元々の符号」を付けて返す。
   return(sign(x) * pmax(abs(x) - lambda, 0))
 }
 
@@ -45,13 +48,14 @@ linear_lasso <- function(X, y, lambda = 0, beta = rep(0, ncol(X))) {
   n <- nrow(X)
   p <- ncol(X)
   
-  res <- centralize(X, y)
+  res <- centralize(X, y) # X, yを中心化
   X <- res$X
   y <- res$y
   
-  eps <- 1
-  beta_old <- beta
+  eps <- 1 # betaの収束判定用変数を1で初期化する。
+  beta_old <- beta # beta_oldを引数betaで初期化する。
   
+  # Lassoのコアルーチン
   while (eps > 0.001) {
     for (j in 1:p) {
       r <- y - as.matrix(X[, -j]) %*% beta[-j]
@@ -62,8 +66,8 @@ linear_lasso <- function(X, y, lambda = 0, beta = rep(0, ncol(X))) {
     beta_old <- beta
   }
   
-  beta <- beta / res$X_sd
-  beta_0 <- res$y_bar - sum(res$X_bar * beta)
+  beta <- beta / res$X_sd # betaを正規化する前の値に戻す。
+  beta_0 <- res$y_bar - sum(res$X_bar * beta) # Lassoの切片beta_0
   
   return(list(beta = beta, beta_0 = beta_0))
 }
@@ -87,7 +91,7 @@ plot(lambda_seq,
      col = "red")
 
 r <- length(lambda_seq)
-coef_seq <- array(dim = c(r, p))
+coef_seq <- array(dim = c(r, p)) # 各lambdaに対するbeta値を格納する配列
 
 for (i in 1:r) {
   coef_seq[i, ] <- linear_lasso(X, y, lambda_seq[i])$beta
