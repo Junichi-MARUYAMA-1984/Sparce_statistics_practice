@@ -76,7 +76,6 @@ linear_lasso <- function(X, y, lambda = 0, beta = rep(0, ncol(X))) {
 }
 
 # Main routine
-
 df <- read.table("crime.txt")
 X <- df[, 3:7]
 y <- df[, 1]
