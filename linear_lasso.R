@@ -1,6 +1,9 @@
 # Clear Working Memory
 rm(list = ls())
 
+# Setting Japanese font (for MacOSX)
+par(family= "HiraKakuProN-W3")
+
 # Function for determining formula type
 soft_th <- function(lambda, x) {
   # xの絶対値がlambdaの絶対値よりも小さいときは、0を返す。
