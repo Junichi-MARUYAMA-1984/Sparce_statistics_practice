@@ -89,7 +89,7 @@ plot(lambda_seq,
      ylim = c(-10, 20), 
      xlab = "lambda",
      ylab = "beta", 
-     main = "各lambdaについての各係数の値",
+     main = "各lambdaにおける各項目beta値\n（年間犯罪率への寄与率を表す）",
      type = "n",
      col = "red")
 

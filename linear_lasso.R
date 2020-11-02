@@ -110,7 +110,8 @@ plot(log(lambda_seq, base = 10),
      coef_seq[, 1],
      ylim = c(min(coef_seq), max(coef_seq)), 
      xlab = "log(lambda) [base = 10]",
-     ylab = "係数", 
+     ylab = "beta", 
+     main = "各lambdaにおける各項目beta値\n（年間犯罪率への寄与率を表す）",
      type = "n") 
 
 for (j in 1:p) {
