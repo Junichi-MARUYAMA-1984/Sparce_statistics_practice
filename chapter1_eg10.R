@@ -7,6 +7,8 @@ rm(list = ls())
 # Setting Japanese font (for MacOSX)
 # par(family= "HiraKakuProN-W3")
 
+# Chapter1 E.g.7と同様のデータセットに対し、
+# alphaとlambdaの二重CVを行い最適値を検討する。
 n <- 500
 x <- array(dim = c(n, 6))
 z <- array(dim = c(n, 2))
@@ -36,3 +38,4 @@ lambda_min
 glmnet(x, y, alpha = alpha_min, lambda = lambda_min)$beta
 glm_fit <- glmnet(x, y, alpha = alpha_min)
 plot(glm_fit)
+plot(glm_fit, xvar = "lambda")
