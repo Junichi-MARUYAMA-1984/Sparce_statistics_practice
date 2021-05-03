@@ -82,10 +82,10 @@ X <- df[, 3:7]
 y <- df[, 1]
 
 p <- ncol(X)
-lambda_seq <- seq(0, 200, 0.1)
+lambda_seq <- seq(0, 100, 0.1)
 
 plot(lambda_seq, 
-     xlim = c(0, 200),
+     xlim = c(0, 100),
      ylim = c(-10, 20), 
      xlab = "lambda",
      ylab = "beta", 
