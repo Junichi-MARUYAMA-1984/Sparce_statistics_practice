@@ -1,9 +1,9 @@
 # Load libraries
 library(glmnet)
 library(survival)
-library(ranger)
+# library(ranger)
 library(ggplot2)
-library(dplyr)
+# library(dplyr)
 library(ggfortify)
 
 # Clear Working Memory
@@ -16,7 +16,7 @@ rm(list = ls())
 # 悪性リンパ腫データを用いたcox lasso解析
 
 load("LymphomaData.rda")
-attach("LymphomaData.rda")
+# attach("LymphomaData.rda")
 names(patient.data)
 x <- t(patient.data$x)
 y <- patient.data$time
